@@ -4,25 +4,33 @@ import Field, { FIELD_TYPES } from "../../components/Field";
 import Select from "../../components/Select";
 import Button, { BUTTON_TYPES } from "../../components/Button";
 
-const mockContactApi = () => new Promise((resolve) => { setTimeout(resolve, 500); })
+const mockContactApi = () =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 500);
+  });
 
 const Form = ({ onSuccess, onError }) => {
   const [sending, setSending] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(""); // Ajout d'un état pour le message de confirmation
+
   const sendContact = useCallback(
     async (evt) => {
       evt.preventDefault();
       setSending(true);
-      // We try to call mockContactApi
+      setSuccessMessage(""); // Réinitialise le message de confirmation avant un nouvel envoi
       try {
         await mockContactApi();
         setSending(false);
+        setSuccessMessage("Message envoyé avec succès !"); // Définit le message de confirmation
+        onSuccess(); // Appelle la fonction onSuccess si elle est définie
       } catch (err) {
         setSending(false);
-        onError(err);
+        onError(err); // Appelle la fonction onError en cas d'erreur
       }
     },
     [onSuccess, onError]
   );
+
   return (
     <form onSubmit={sendContact}>
       <div className="row">
@@ -49,6 +57,10 @@ const Form = ({ onSuccess, onError }) => {
           />
         </div>
       </div>
+      {/* Affichage du message de confirmation */}
+      {successMessage && (
+        <div className="success-message">{successMessage}</div>
+      )}
     </form>
   );
 };
@@ -56,11 +68,11 @@ const Form = ({ onSuccess, onError }) => {
 Form.propTypes = {
   onError: PropTypes.func,
   onSuccess: PropTypes.func,
-}
+};
 
 Form.defaultProps = {
   onError: () => null,
   onSuccess: () => null,
-}
+};
 
 export default Form;

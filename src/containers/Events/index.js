@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EventCard from "../../components/EventCard";
 import Select from "../../components/Select";
 import { useData } from "../../contexts/DataContext";
@@ -10,27 +10,28 @@ import "./style.css";
 const PER_PAGE = 9;
 
 const EventList = () => {
-  const { data, error } = useData();
-  const [type, setType] = useState();
-  const [currentPage, setCurrentPage] = useState(1);
-  const filteredEvents = (
-    (!type
-      ? data?.events
-      : data?.events) || []
-  ).filter((event, index) => {
-    if (
-      (currentPage - 1) * PER_PAGE <= index &&
-      PER_PAGE * currentPage > index
-    ) {
-      return true;
-    }
-    return false;
-  });
+  const { data, error } = useData(); // Récupération des données et des erreurs
+  const [type, setType] = useState(null); // State pour gérer le type de catégorie sélectionné
+  const [currentPage, setCurrentPage] = useState(1);  // State pour suivre la page courante dans la pagination
+  const [filteredEvents, setfilteredEvents] = useState([]) // State pour contenir les événements filtrés affichés sur la page actuelle
+  const [pageNumber, setPageNumber] = useState(0) // State pour le nombre total de pages nécessaires pour afficher tous les événements filtrés
+
+  useEffect(() => {
+    // filtre les événements en fonction du type sélectionné, ou affiche tous les événements si aucun type n'est sélectionné
+    const filteredEventsAll = (data?.events || []).filter((event) => !type || event.type === type)
+    // découpe les événements filtrés en fonction de la pagination
+    const paginatedEvents = filteredEventsAll.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
+    // Met à jour le state avec les événements paginés
+    setfilteredEvents(paginatedEvents)
+    // Calcule le nombre total de pages nécessaires
+    setPageNumber(Math.ceil(filteredEventsAll.length / PER_PAGE));
+  }, [data, type, currentPage])
+ // Fonction pour changer de catégorie, réinitialise à la première page
   const changeType = (evtType) => {
-    setCurrentPage(1);
+    setCurrentPage(1); 
     setType(evtType);
   };
-  const pageNumber = Math.floor((filteredEvents?.length || 0) / PER_PAGE) + 1;
+  // Génère une liste unique des types d'événements (catégories) disponibles
   const typeList = new Set(data?.events.map((event) => event.type));
   return (
     <>
